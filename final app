@@ -1,0 +1,114 @@
+db.employees.insert({
+    name: "John Doe",
+    position: "Chef",
+    salary: 50000,
+    contact: {
+        email: "john@example.com",
+        phone: "555-555-5555"
+    }
+})
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+const port = 3000;
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost/restaurantDB', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+const Employee = mongoose.model('Employee', {
+  name: String,
+  position: String,
+  salary: Number,
+  contact: {
+    email: String,
+    phone: String
+  }
+});
+
+app.use(express.json());
+
+// Endpoint to retrieve all employees
+app.get('/employees', async (req, res) => {
+  const employees = await Employee.find();
+  res.json(employees);
+});
+
+// Endpoint to retrieve an employee by ID
+app.get('/employees/:id', async (req, res) => {
+  const employee = await Employee.findById(req.params.id);
+  res.json(employee);
+});
+
+// Endpoint to create a new employee
+app.post('/employees', async (req, res) => {
+  const employee = new Employee(req.body);
+  await employee.save();
+  res.status(201).json(employee);
+});
+
+// Endpoint to update an employee by ID
+app.put('/employees/:id', async (req, res) => {
+  await Employee.findByIdAndUpdate(req.params.id, req.body);
+  res.sendStatus(200);
+});
+
+// Endpoint to delete an employee by ID
+app.delete('/employees/:id', async (req, res) => {
+  await Employee.findByIdAndRemove(req.params.id);
+  res.sendStatus(204);
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [
+  { path: 'employees', component: EmployeeListComponent },
+  { path: 'create', component: CreateEmployeeComponent },
+  { path: 'update/:id', component: UpdateEmployeeComponent },
+  { path: '', redirectTo: '/employees', pathMatch: 'full' },
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+})
+export class AppRoutingModule {}
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class EmployeeService {
+  private baseUrl = 'http://localhost:3000'; // Your API endpoint
+
+  constructor(private http: HttpClient) {}
+
+  getEmployees() {
+    return this.http.get(`${this.baseUrl}/employees`);
+  }
+
+  createEmployee(employee) {
+    return this.http.post(`${this.baseUrl}/employees`, employee);
+  }
+
+  updateEmployee(id, employee) {
+    return this.http.put(`${this.baseUrl}/employees/${id}`, employee);
+  }
+
+  deleteEmployee(id) {
+    return this.http.delete(`${this.baseUrl}/employees/${id}`);
+  }
+}
+<ul>
+  <li *ngFor="let employee of employees">
+    {{ employee.name }} ({{ employee.position }})
+    <a [routerLink]="['/update', employee._id]">Edit</a>
+    <button (click)="deleteEmployee(employee._id)">Delete</button>
+  </li>
+</ul>
